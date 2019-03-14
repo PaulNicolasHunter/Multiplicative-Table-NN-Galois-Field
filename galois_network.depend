@@ -1,0 +1,10 @@
+# depslib dependency file v1.0
+1552477506 source:j:\school work\isandc\galois_network\main.c
+	<stdio.h>
+	<stdlib.h>
+	"include/tensorflow/c/c_api.h"
+
+1541123852 j:\school work\isandc\galois_network\include\tensorflow\c\c_api.h
+	<stddef.h>
+	<stdint.h>
+
