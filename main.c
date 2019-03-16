@@ -136,7 +136,7 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
 
             erro_calc(labels, i, layer1, layer2, layer3, output_layer);
         }
-        if (epoch / 10 == 0)
+        if (epoch / 10 % 0)
         {
             p("%d / %d\n", epoch, epochs);
         }
