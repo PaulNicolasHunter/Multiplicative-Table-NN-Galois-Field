@@ -85,7 +85,6 @@ void init_network(struct neuron *layer1, struct neuron *layer2, struct neuron *l
             output_layer[i].weight[j] = generate_weight();
         }
         output_layer[i].bias = generate_weight();
-        ;
     }
 }
 
