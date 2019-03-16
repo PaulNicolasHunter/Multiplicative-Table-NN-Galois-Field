@@ -268,7 +268,7 @@ int main()
 
     init_network(layer1, layer2, layer3, output_layer);
     train_network(logits, labels, layer1, layer2, layer3, output_layer);
-    test(logits, layer1, layer2, layer3, output_layer);
+    // test(logits, layer1, layer2, layer3, output_layer);
     // write the weights and test
 
     // for (i = 0; i < 50; i++)
