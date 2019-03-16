@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define p printf    // lazy
-#define epochs 5    // epochs
+#define epochs 100  // epochs
 #define lrate 0.025 // learning rate
 
 float generate_weight()
@@ -130,12 +130,15 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
                 {
                     wsum += output_layer[j].weight[k] * (float)layer3[k].value + (float)output_layer[j].bias;
                 }
+                output_layer[j].value = act_bro(wsum, 0);
+                output_layer[j].der = act_bro(wsum, 1);
             }
 
-            output_layer[j].value = act_bro(wsum, 0);
-            output_layer[j].der = act_bro(wsum, 1);
-
             erro_calc(labels, i, layer1, layer2, layer3, output_layer);
+        }
+        if (epoch / 10 == 0)
+        {
+            p("%d / %d\n", epoch, epochs);
         }
         epoch += 1;
     }
@@ -155,8 +158,6 @@ void erro_calc(int labels[64][3], int batch_num, struct neuron *layer1, struct n
     hidden_prop(layer3, output_layer, 50, 3);
     hidden_prop(layer2, layer3, 70, 50);
     hidden_prop(layer1, layer2, 50, 70);
-
-    p("batch num => %d \n", batch_num);
 }
 
 void back_prop(struct neuron *layer, int neurons, int weights_num)
@@ -189,6 +190,56 @@ void hidden_prop(struct neuron *lay_prev, struct neuron *lay_next, int neu_prev,
         back_prop(lay_prev, 50, 70);
     }
 }
+void test(int t[64][6], struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
+{
+
+    int wsum, i, j, k;
+
+    for (i = 0; i < 64; i++)
+    {
+        for (j = 0; j < 50; j++)
+        {
+            wsum = 0;
+            for (k = 0; k < 6; k++)
+            {
+                wsum = wsum + (layer1[j].weight[k] * (float)t[i][k] + (float)layer1[j].bias);
+            }
+            layer1[j].value = act_bro(wsum, 0); // Y-in
+        }
+
+        for (j = 0; j < 70; j++)
+        {
+            wsum = 0;
+            for (k = 0; k < 50; k++)
+            {
+                wsum += layer2[j].weight[k] * (float)layer1[k].value + (float)layer2[j].bias;
+            }
+            layer2[j].value = act_bro(wsum, 0);
+        }
+
+        for (j = 0; j < 50; j++)
+        {
+            wsum = 0;
+            for (k = 0; k < 70; k++)
+            {
+                wsum += layer3[j].weight[k] * (float)layer2[k].value + (float)layer3[j].bias;
+            }
+            layer3[j].value = act_bro(wsum, 0);
+        }
+
+        for (j = 0; j < 3; j++)
+        {
+            wsum = 0;
+            for (k = 0; k < 50; k++)
+            {
+                wsum += output_layer[j].weight[k] * (float)layer3[k].value + (float)output_layer[j].bias;
+            }
+            output_layer[j].value = act_bro(wsum, 0);
+            p("%d ", output_layer[j].value);
+        }
+        p("\n");
+    }
+}
 
 int main()
 {
@@ -207,6 +258,7 @@ int main()
 
     init_network(layer1, layer2, layer3, output_layer);
     train_network(logits, labels, layer1, layer2, layer3, output_layer);
+    test(logits, layer1, layer2, layer3, output_layer);
     // write the weights and test
     return 0;
 }
