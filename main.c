@@ -84,9 +84,9 @@ void init_network(struct neuron *layer1, struct neuron *layer2, struct neuron *l
 
 void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
 {
-    int i, j, k, l, m, wsum;
+    int i, j, k, l, m, wsum, epoch = 0;
 
-    while (epochs < 4) // we run this 4 times
+    while (epoch < epochs) // we run this 4 times
     {
         for (i = 0; i < 64; i++) // we have 64 imputs
         {
@@ -98,7 +98,7 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
                     wsum = wsum + (layer1[j].weight[k] * (float)logits[i][k] + (float)layer1[j].bias);
                 }
                 layer1[j].value = act_bro(wsum, 0); // Y-in
-                layer1[j].der = act_bro(wsum, 1); // derivative (Y) = f'(Y-in) 
+                layer1[j].der = act_bro(wsum, 1);   // derivative (Y) = f'(Y-in)
             }
 
             for (j = 0; j < 70; j++)
@@ -136,6 +136,7 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
 
             erro_calc(labels, i, layer1, layer2, layer3, output_layer);
         }
+        epoch += 1;
     }
 }
 
@@ -144,30 +145,53 @@ void erro_calc(int labels[64][3], int batch_num, struct neuron *layer1, struct n
     int i, j, k;
     float delta, deltaj;
 
-    for (i = 0; i < 3; i++)  // for output layer we directly have the error
+    for (i = 0; i < 3; i++) // for output layer we directly have the error
     {
-        delta = (labels[batch_num][i] - output_layer[i].value) * output_layer[i].der; // delta
-        output_layer[i].error = delta; // error at each output node
-        back_prop(output_layer, 3, 50, delta); // just updating the weights
+        deltaj = (labels[batch_num][i] - output_layer[i].value) * output_layer[i].der; // delta
+        output_layer[i].error = deltaj;                                                // error at each output node
     }
+    back_prop(output_layer, 3, 50); // updating the weights
 
+    // hidden_prop();
     for (i = 0; i < 50; i++)
     {
         delta = 0;
         for (j = 0; j < 3; j++)
         {
-            delta += output_layer[j].error * layer3[i].weight[j];
+            delta += output_layer[j].error * output_layer[j].weight[i];
         }
-
         deltaj = delta * act_bro(layer3[i].value, 1);
+        layer3[i].error = deltaj;
+        back_prop(layer3, 50, 70);
     }
 
-    // back_prop(layer3, 50, 70, error);
-    // back_prop(layer2, 70, 50, error);
-    // back_prop(layer1, 50, 6, error);
+    for (i = 0; i < 70; i++)
+    {
+        delta = 0;
+        for (j = 0; j < 50; j++)
+        {
+            delta += layer3[j].error * layer3[j].weight[i];
+        }
+        deltaj = delta * act_bro(layer2[i].value, 1);
+        layer2[i].error = deltaj;
+        back_prop(layer2, 70, 50);
+    }
+
+    for (i = 0; i < 50; i++)
+    {
+        delta = 0;
+        for (j = 0; j < 70; j++)
+        {
+            delta += layer3[j].error * layer3[j].weight[i];
+        }
+        deltaj = delta * act_bro(layer2[i].value, 1);
+        layer2[i].error = deltaj;
+        back_prop(layer2, 70, 50);
+    }
+    p("batch num => %d \n", batch_num);
 }
 
-void back_prop(struct neuron *layer, int neurons, int weights_num, float error)
+void back_prop(struct neuron *layer, int neurons, int weights_num)
 {
     int i, j;
 
@@ -175,8 +199,8 @@ void back_prop(struct neuron *layer, int neurons, int weights_num, float error)
     {
         for (j = 0; j < weights_num; j++)
         {
-            layer[i].weight[j] = layer[i].weight[j] * layer[i].value * lrate;
-            layer[i].bias = layer[i].value * lrate;
+            layer[i].weight[j] = layer[i].weight[j] + layer[i].error * lrate * layer[i].value;
+            layer[i].bias = layer[i].bias + layer[i].error * lrate;
         }
     }
 }
@@ -191,10 +215,10 @@ int main()
     int labels[64][3] = {
         {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1}, {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}, {0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}, {1, 0, 1}, {1, 1, 1}, {0, 0, 1}, {0, 1, 1}, {0, 0, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 1}, {0, 0, 1}, {0, 1, 0}, {1, 1, 1}, {1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}, {1, 1, 1}, {0, 1, 1}, {0, 1, 0}, {1, 1, 0}, {0, 0, 0}, {1, 0, 1}, {1, 1, 1}, {0, 1, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 0}, {0, 0, 1}, {0, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 1, 1}, {0, 1, 0}, {1, 0, 0}, {0, 1, 1}, {1, 0, 1}, {0, 0, 0}, {1, 1, 1}, {0, 1, 1}, {1, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 1}, {0, 1, 0}};
 
-    layer1 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));
-    layer2 = (struct neuron *)(malloc(sizeof(struct neuron) * 70));
-    layer3 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));
-    output_layer = (struct neuron *)(malloc(sizeof(struct neuron) * 3));
+    layer1 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50 neuron at first layer
+    layer2 = (struct neuron *)(malloc(sizeof(struct neuron) * 70));      // 70
+    layer3 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50
+    output_layer = (struct neuron *)(malloc(sizeof(struct neuron) * 3)); // 3 output
 
     init_network(layer1, layer2, layer3, output_layer);
     train_network(logits, labels, layer1, layer2, layer3, output_layer);
