@@ -1,5 +1,5 @@
 bin
-# obj
-# galoid_network.depend
-# main.exe
-# main.o
+obj
+galoid_network.depend
+main.exe
+main.o

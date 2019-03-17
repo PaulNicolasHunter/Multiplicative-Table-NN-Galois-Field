@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #define p printf    // i'm lazy
-#define epochs 1    // epochs
+#define epochs 5    // epochs
 #define lrate 0.025 // learning rate
 
 float generate_weight()
@@ -14,13 +14,50 @@ float generate_weight()
 struct neuron // structure of each neuron in a layer
 {
     float weight[70]; // incoming weights of each neuron
-    int weights_num;  // how many inputs each neuron is having: 6 in-case of first layer, 50 incase of second layer
-    float bias;       // bias on each node
-    float value;      // w*x + v , value of each node
-    float der;        // derivative of "value"
-    float error;      // error on each node
+    // int weights_num;  // how many inputs each neuron is having: 6 in-case of first layer, 50 incase of second layer
+    float bias;  // bias on each node
+    float value; // w*x + v , value of each node
+    float der;   // derivative of "value"
+    float error; // error on each node
 };
 
+float act_bro(float y, int der) // activation function Relu
+{
+    if (y <= 0.0)
+    {
+        return 0.0;
+    }
+    else if (der == 0)
+    {
+        return y;
+    }
+    else
+    {
+        return 1.0;
+    }
+    // if (der == 0)
+    // {
+    //     return 1 / (1 - exp(-y));
+    // }
+    // else
+    // {
+    //     return (1 / (1 - exp(-y))) * (1 - (1 / (1 - exp(-y))));
+    // }
+    
+}
+void view_hype(struct neuron *layer)
+{
+    int i, j;
+    for (i = 0; i < 50; i++) // first layer will have 6 inputs on each neuron
+    {
+        for (j = 0; j < 6; j++)
+        {
+            p("%f ", layer[i].error); // i = each neuron, j = each incoming input
+        }
+        p("\n");
+        // layer1[i].bias = generate_weight(); // bias
+    }
+}
 void init_network(struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
 {
     int i, j;
@@ -73,6 +110,7 @@ void back_prop(struct neuron *layer, int neurons, int weights_num) // operates i
             layer[i].bias = layer[i].bias + (layer[i].error * lrate);
         }
     }
+    view_hype(layer);
 }
 
 void hidden_prop(struct neuron *lay_prev, struct neuron *lay_next, int neu_prev, int neu_next)
@@ -86,10 +124,9 @@ void hidden_prop(struct neuron *lay_prev, struct neuron *lay_next, int neu_prev,
         {
             delta += lay_next[j].error * lay_next[j].weight[i];
         }
-        // p("%f ", lay_prev[i].value);
         deltaj = delta * act_bro(lay_prev[i].value, 1);
-        // lay_prev[i].error = deltaj;
-        // back_prop(lay_prev, 50, 70);
+        lay_prev[i].error = deltaj;
+        back_prop(lay_prev, 50, 70);
     }
 }
 
@@ -113,24 +150,8 @@ void erro_calc(int labels[64][3], int batch_num, struct neuron *layer1, struct n
     }
     back_prop(output_layer, 3, 50); // updating the weights
     hidden_prop(layer3, output_layer, 50, 3);
-    // hidden_prop(layer2, layer3, 70, 50);
-    // hidden_prop(layer1, layer2, 50, 70);
-}
-
-float act_bro(float y, int der) // activation function Relu
-{
-    if (y <= 0.0)
-    {
-        return 0.0;
-    }
-    else if (der == 0)
-    {
-        return y;
-    }
-    else
-    {
-        return 1.0;
-    }
+    hidden_prop(layer2, layer3, 70, 50);
+    hidden_prop(layer1, layer2, 50, 70);
 }
 
 void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
@@ -196,38 +217,6 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
     }
 }
 
-int main()
-{
-    struct neuron *layer1, *layer2, *layer3, *output_layer;
-    // 64 * 6
-    int i, j;
-    int logits[64][6] = {
-        {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 1}, {0, 0, 0, 1, 0, 0}, {0, 0, 0, 1, 0, 1}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 1, 1, 1}, {0, 0, 1, 0, 0, 0}, {0, 0, 1, 0, 0, 1}, {0, 0, 1, 0, 1, 0}, {0, 0, 1, 0, 1, 1}, {0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 1}, {0, 0, 1, 1, 1, 0}, {0, 0, 1, 1, 1, 1}, {0, 1, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 1}, {0, 1, 0, 0, 1, 0}, {0, 1, 0, 0, 1, 1}, {0, 1, 0, 1, 0, 0}, {0, 1, 0, 1, 0, 1}, {0, 1, 0, 1, 1, 0}, {0, 1, 0, 1, 1, 1}, {0, 1, 1, 0, 0, 0}, {0, 1, 1, 0, 0, 1}, {0, 1, 1, 0, 1, 0}, {0, 1, 1, 0, 1, 1}, {0, 1, 1, 1, 0, 0}, {0, 1, 1, 1, 0, 1}, {0, 1, 1, 1, 1, 0}, {0, 1, 1, 1, 1, 1}, {1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 1}, {1, 0, 0, 0, 1, 0}, {1, 0, 0, 0, 1, 1}, {1, 0, 0, 1, 0, 0}, {1, 0, 0, 1, 0, 1}, {1, 0, 0, 1, 1, 0}, {1, 0, 0, 1, 1, 1}, {1, 0, 1, 0, 0, 0}, {1, 0, 1, 0, 0, 1}, {1, 0, 1, 0, 1, 0}, {1, 0, 1, 0, 1, 1}, {1, 0, 1, 1, 0, 0}, {1, 0, 1, 1, 0, 1}, {1, 0, 1, 1, 1, 0}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 0, 0, 0}, {1, 1, 0, 0, 0, 1}, {1, 1, 0, 0, 1, 0}, {1, 1, 0, 0, 1, 1}, {1, 1, 0, 1, 0, 0}, {1, 1, 0, 1, 0, 1}, {1, 1, 0, 1, 1, 0}, {1, 1, 0, 1, 1, 1}, {1, 1, 1, 0, 0, 0}, {1, 1, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 0}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1}};
-    // 64 * 3
-    int labels[64][3] = {
-        {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1}, {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}, {0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}, {1, 0, 1}, {1, 1, 1}, {0, 0, 1}, {0, 1, 1}, {0, 0, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 1}, {0, 0, 1}, {0, 1, 0}, {1, 1, 1}, {1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}, {1, 1, 1}, {0, 1, 1}, {0, 1, 0}, {1, 1, 0}, {0, 0, 0}, {1, 0, 1}, {1, 1, 1}, {0, 1, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 0}, {0, 0, 1}, {0, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 1, 1}, {0, 1, 0}, {1, 0, 0}, {0, 1, 1}, {1, 0, 1}, {0, 0, 0}, {1, 1, 1}, {0, 1, 1}, {1, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 1}, {0, 1, 0}};
-
-    layer1 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50 neuron at first layer
-    layer2 = (struct neuron *)(malloc(sizeof(struct neuron) * 70));      // 70
-    layer3 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50
-    output_layer = (struct neuron *)(malloc(sizeof(struct neuron) * 3)); // 3 output
-
-    init_network(layer1, layer2, layer3, output_layer);
-    train_network(logits, labels, layer1, layer2, layer3, output_layer);
-    // test(logits, layer1, layer2, layer3, output_layer);
-    // write the weights and test
-    // puts("*-*-*");
-    // for (i = 0; i < 50; i++)
-    // {
-    //     for (j = 0; j < 6; j++)
-    //     {
-    //         p("%f ", layer1[i].weight[j]);
-    //     }
-    //     puts("*-*-");
-    // }
-    return 0;
-}
-
 void test(int t[64][6], struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
 {
 
@@ -273,6 +262,40 @@ void test(int t[64][6], struct neuron *layer1, struct neuron *layer2, struct neu
                 wsum += output_layer[j].weight[k] * layer3[k].value;
             }
             output_layer[j].value = act_bro(wsum, 0);
+            p("%f ", output_layer[j].value);
         }
+        puts("");
     }
+}
+
+int main()
+{
+    struct neuron *layer1, *layer2, *layer3, *output_layer;
+    // 64 * 6
+    int i, j;
+    int logits[64][6] = {
+        {0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 1}, {0, 0, 0, 0, 1, 0}, {0, 0, 0, 0, 1, 1}, {0, 0, 0, 1, 0, 0}, {0, 0, 0, 1, 0, 1}, {0, 0, 0, 1, 1, 0}, {0, 0, 0, 1, 1, 1}, {0, 0, 1, 0, 0, 0}, {0, 0, 1, 0, 0, 1}, {0, 0, 1, 0, 1, 0}, {0, 0, 1, 0, 1, 1}, {0, 0, 1, 1, 0, 0}, {0, 0, 1, 1, 0, 1}, {0, 0, 1, 1, 1, 0}, {0, 0, 1, 1, 1, 1}, {0, 1, 0, 0, 0, 0}, {0, 1, 0, 0, 0, 1}, {0, 1, 0, 0, 1, 0}, {0, 1, 0, 0, 1, 1}, {0, 1, 0, 1, 0, 0}, {0, 1, 0, 1, 0, 1}, {0, 1, 0, 1, 1, 0}, {0, 1, 0, 1, 1, 1}, {0, 1, 1, 0, 0, 0}, {0, 1, 1, 0, 0, 1}, {0, 1, 1, 0, 1, 0}, {0, 1, 1, 0, 1, 1}, {0, 1, 1, 1, 0, 0}, {0, 1, 1, 1, 0, 1}, {0, 1, 1, 1, 1, 0}, {0, 1, 1, 1, 1, 1}, {1, 0, 0, 0, 0, 0}, {1, 0, 0, 0, 0, 1}, {1, 0, 0, 0, 1, 0}, {1, 0, 0, 0, 1, 1}, {1, 0, 0, 1, 0, 0}, {1, 0, 0, 1, 0, 1}, {1, 0, 0, 1, 1, 0}, {1, 0, 0, 1, 1, 1}, {1, 0, 1, 0, 0, 0}, {1, 0, 1, 0, 0, 1}, {1, 0, 1, 0, 1, 0}, {1, 0, 1, 0, 1, 1}, {1, 0, 1, 1, 0, 0}, {1, 0, 1, 1, 0, 1}, {1, 0, 1, 1, 1, 0}, {1, 0, 1, 1, 1, 1}, {1, 1, 0, 0, 0, 0}, {1, 1, 0, 0, 0, 1}, {1, 1, 0, 0, 1, 0}, {1, 1, 0, 0, 1, 1}, {1, 1, 0, 1, 0, 0}, {1, 1, 0, 1, 0, 1}, {1, 1, 0, 1, 1, 0}, {1, 1, 0, 1, 1, 1}, {1, 1, 1, 0, 0, 0}, {1, 1, 1, 0, 0, 1}, {1, 1, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 1}, {1, 1, 1, 1, 0, 0}, {1, 1, 1, 1, 0, 1}, {1, 1, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1}};
+    // 64 * 3
+    int labels[64][3] = {
+        {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1}, {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}, {0, 0, 0}, {0, 1, 0}, {1, 0, 0}, {1, 1, 0}, {1, 0, 1}, {1, 1, 1}, {0, 0, 1}, {0, 1, 1}, {0, 0, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 1}, {0, 0, 1}, {0, 1, 0}, {1, 1, 1}, {1, 0, 0}, {0, 0, 0}, {1, 0, 0}, {1, 0, 1}, {0, 0, 1}, {1, 1, 1}, {0, 1, 1}, {0, 1, 0}, {1, 1, 0}, {0, 0, 0}, {1, 0, 1}, {1, 1, 1}, {0, 1, 0}, {0, 1, 1}, {1, 1, 0}, {1, 0, 0}, {0, 0, 1}, {0, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 1, 1}, {0, 1, 0}, {1, 0, 0}, {0, 1, 1}, {1, 0, 1}, {0, 0, 0}, {1, 1, 1}, {0, 1, 1}, {1, 0, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 1}, {0, 1, 0}};
+
+    layer1 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50 neuron at first layer
+    layer2 = (struct neuron *)(malloc(sizeof(struct neuron) * 70));      // 70
+    layer3 = (struct neuron *)(malloc(sizeof(struct neuron) * 50));      // 50
+    output_layer = (struct neuron *)(malloc(sizeof(struct neuron) * 3)); // 3 output
+
+    init_network(layer1, layer2, layer3, output_layer);
+    train_network(logits, labels, layer1, layer2, layer3, output_layer);
+    // test(logits, layer1, layer2, layer3, output_layer);
+    // write the weights and test
+    // puts("*-*-*");
+    // for (i = 0; i < 50; i++)
+    // {
+    //     for (j = 0; j < 6; j++)
+    //     {
+    //         p("%f ", layer1[i].weight[j]);
+    //     }
+    //     puts("*-*-");
+    // }
+    return 0;
 }
