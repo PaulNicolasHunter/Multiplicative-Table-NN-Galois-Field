@@ -1,6 +1,7 @@
-import matplotlib.pyplot as plt
-from itertools import permutations
+# import matplotlib.pyplot as plt
+# from itertools import permutations
 
-i = list(permutations(range(9), 2))
+# i = list(permutations(range(9), 2))
 
-plt.plot(i, )
+# plt.plot(i, )
+print('hello world')

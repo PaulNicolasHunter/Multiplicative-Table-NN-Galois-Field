@@ -77,8 +77,8 @@ void back_prop(struct neuron *layer, int neurons, int weights_num) // operates i
 
 void hidden_prop(struct neuron *lay_prev, struct neuron *lay_next, int neu_prev, int neu_next)
 {
-    int i, j, delta, deltaj;
-
+    int i, j;
+    float delta, deltaj;
     for (i = 0; i < neu_prev; i++)
     {
         delta = 0;
@@ -86,9 +86,10 @@ void hidden_prop(struct neuron *lay_prev, struct neuron *lay_next, int neu_prev,
         {
             delta += lay_next[j].error * lay_next[j].weight[i];
         }
-        deltaj = delta * act_bro(lay_prev[i].value, 1.0);
-        lay_prev[i].error = deltaj;
-        back_prop(lay_prev, 50, 70);
+        // p("%f ", lay_prev[i].value);
+        deltaj = delta * act_bro(lay_prev[i].value, 1);
+        // lay_prev[i].error = deltaj;
+        // back_prop(lay_prev, 50, 70);
     }
 }
 
@@ -111,7 +112,7 @@ void erro_calc(int labels[64][3], int batch_num, struct neuron *layer1, struct n
         output_layer[i].error = deltaj;                                                // error at each output node
     }
     back_prop(output_layer, 3, 50); // updating the weights
-    // hidden_prop(layer3, output_layer, 50, 3);
+    hidden_prop(layer3, output_layer, 50, 3);
     // hidden_prop(layer2, layer3, 70, 50);
     // hidden_prop(layer1, layer2, 50, 70);
 }
@@ -134,7 +135,7 @@ float act_bro(float y, int der) // activation function Relu
 
 void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, struct neuron *layer2, struct neuron *layer3, struct neuron *output_layer)
 {
-    int i, j, k, l, m, epoch = 0;
+    int i, j, k, epoch = 0;
     float wsum;
 
     while (epoch < epochs) // we run this 4 times
@@ -185,7 +186,7 @@ void train_network(int logits[64][6], int labels[64][3], struct neuron *layer1, 
                 output_layer[j].der = act_bro(wsum, 1);
             }
 
-            // erro_calc(labels, i, layer1, layer2, layer3, output_layer);
+            erro_calc(labels, i, layer1, layer2, layer3, output_layer);
         }
         // if (epoch % 10 == 0)
         // {
