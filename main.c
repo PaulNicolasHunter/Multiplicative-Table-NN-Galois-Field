@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <math.h>
 #define p printf     // i'm lazy
-#define epochs 200   // epochs
+#define epochs 50   // epochs
 #define lrate 0.0025 // learning rate
 
 float generate_weight()
 {
     float scale = rand() / (float)RAND_MAX; /* [0, 1.0] */
-    return -0.98 + scale * (1.2 + 0.98);    /* [min, max] */
+    return 0.98 + scale * (1.2 - 0.98);    /* [min, max] */
 }
 // weights_num and bias and make it 2b and ask for neurons
 struct neuron // structure of each neuron in a layer
@@ -89,7 +89,6 @@ void back_prop(struct neuron *layer, int neurons, int weights_incoming) // opera
             layer[i].bias = layer[i].bias + (layer[i].error * lrate);
         }
     }
-    puts("");
 }
 
 void hidden_prop(struct neuron *current_lay, struct neuron *lay_next, int neu_curr, int neu_next, int weights_incoming)
@@ -121,7 +120,6 @@ void erro_calc(int labels[64][3], int batch_num, struct neuron *layer1, struct n
         // p(" value=%f lab=%d error=%f ", output_layer[i].value, labels[batch_num][i], output_layer[i].error);
         // p("\n");
     }
-    p("\n");
     back_prop(output_layer, 3, 50); // updating the weights
     hidden_prop(layer3, output_layer, 50, 3, 70);
     hidden_prop(layer2, layer3, 70, 50, 50);
